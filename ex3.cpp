@@ -19,8 +19,12 @@ std::mutex ex3_mutex;
 
 void ThreadSafeEnque(int enque_val){
     // acquire the mutex
-    std::lock_guard<std::mutex> lgm(ex3_mutex);
-    shared_q.push_back(enque_val);
+    {
+        std::unique_lock<std::mutex> lgm(ex3_mutex);
+        shared_q.push_back(enque_val);
+        std::cout << "Produce: " << shared_q.back() << " / ";
+    }
+
     c.notify_one();
 }
 
@@ -30,7 +34,7 @@ void Produce(int val){
     for(int i = 0; i < val; ++i){
         ThreadSafeEnque(i);
         // Bake in a delay
-        std::this_thread::sleep_for(std::chrono::microseconds(rand()% 100 + 1));
+        std::this_thread::sleep_for(std::chrono::microseconds(rand()% 10 + 1));
     }
 }
 
@@ -40,7 +44,7 @@ void ThreadSafeDeque(){
     c.wait(lgm);
     int val = shared_q.front();
     shared_q.pop_front();    
-    std::cout << val << ", ";
+    std::cout << "Consume: " << val << std::endl;
 }
 
 void Consume(int val){
