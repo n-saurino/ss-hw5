@@ -41,7 +41,7 @@ void Produce(int val){
 void ThreadSafeDeque(){
     // acquire the mutex
     std::unique_lock<std::mutex> lgm(ex3_mutex);
-    c.wait(lgm);
+    c.wait(lgm, [] { return !shared_q.empty(); }); // Wait until the queue is not empty
     int val = shared_q.front();
     shared_q.pop_front();    
     std::cout << "Consume: " << val << std::endl;
