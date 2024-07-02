@@ -4,7 +4,12 @@
 #include "ex2.cpp"
 #include "ex3.cpp"
 #include "ex4.cpp"
+#include "ex5.cpp"
 
 int main(int, char**){
-    Ex4();
+    // Ex1();
+    // Ex2();
+    // Ex3();
+    // Ex4();
+    Ex5();
 }
