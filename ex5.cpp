@@ -147,6 +147,7 @@ public:
 
     void Print() const{
         // Print Bids
+        std::cout << "-------------BIDS-------------" << std::endl;
         for(auto level_it = bids_.begin(); level_it != bids_.end(); ++level_it){
             std::cout << level_it->first << ": ";
             for(auto order_it = level_it->second.begin(); order_it != level_it->second.end(); ++order_it){
@@ -156,8 +157,12 @@ public:
         }
 
         // Print Asks
+        std::cout << "-------------ASKS-------------" << std::endl;
         for(auto level_it = asks_.begin(); level_it != asks_.end(); ++level_it){
-
+            std::cout << level_it->first << ": ";
+            for(auto order_it = level_it->second.begin(); order_it != level_it->second.end(); ++order_it){
+                std::cout << (*order_it)->Print() << " -> ";
+            }
         }
     }   
 };
