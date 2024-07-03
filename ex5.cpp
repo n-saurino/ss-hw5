@@ -44,19 +44,20 @@ typedef int64_t Price;
 typedef int32_t Quantity;
 typedef int32_t OrderId;
 
+
 class Order{
 private:
-    OrderId order_id_;
+    static OrderId order_id_;
     Price price_;
     Quantity initial_quantity_;
     Quantity remaining_quantity_;
     Side side_;
 
 public:
-    Order(OrderId order_id, Price price, Quantity quantity, Side side): order_id_(order_id), price_(price), 
+    Order(Price price, Quantity quantity, Side side): price_(price), 
                                                                         initial_quantity_(quantity), remaining_quantity_(quantity),
                                                                         side_(side){
-                                                    
+        order_id_++;
     }
 
     ~Order(){
@@ -85,6 +86,12 @@ public:
 
     Side GetSide() const{
         return side_;
+    }
+
+    std::string Print(){
+        std::stringstream ss;
+        ss << "OrderId: " << this->GetOrderId() << ", Price: " << this->GetPrice() << ", Quantity: " <<  this->GetRemainingQuantity();
+        return ss.str();
     }
 
 };
@@ -137,9 +144,35 @@ public:
     void ModifyOrder(){
 
     }
+
+    void Print() const{
+        // Print Bids
+        for(auto level_it = bids_.begin(); level_it != bids_.end(); ++level_it){
+            std::cout << level_it->first << ": ";
+            for(auto order_it = level_it->second.begin(); order_it != level_it->second.end(); ++order_it){
+                std::cout << (*order_it)->Print() << " -> ";
+            }
+            std::cout << std::endl;
+        }
+
+        // Print Asks
+        for(auto level_it = asks_.begin(); level_it != asks_.end(); ++level_it){
+
+        }
+    }   
 };
 
-int Ex5(){
+// Definition of the static member variable
+int Order::order_id_ = 0;
 
+int Ex5(){
+    Order test_order(100, 10, Side::Bid);
+    Order test_order2(100, 30, Side::Bid);
+    std::cout << test_order.Print() << std::endl;
+
+    Orderbook orderbook;
+    orderbook.AddOrder(&test_order);
+    orderbook.AddOrder(&test_order2);
+    orderbook.Print();
     return 0;
 }
