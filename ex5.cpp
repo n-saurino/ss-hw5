@@ -54,9 +54,8 @@ private:
     Side side_;
 
 public:
-    Order(Price price, Quantity quantity, Side side): price_(price), 
-                                                                        initial_quantity_(quantity), remaining_quantity_(quantity),
-                                                                        side_(side){
+    Order(Price price, Quantity quantity, Side side): price_(price), initial_quantity_(quantity), 
+                                                    remaining_quantity_(quantity), side_(side){
         order_id_++;
     }
 
@@ -94,17 +93,22 @@ public:
         return ss.str();
     }
 
+    bool IsFilled() const{
+        return GetRemainingQuantity();
+    }
+
 };
 
 typedef Order* POrder;
 typedef std::vector<POrder> PriceLevel;
-typedef std::map<Price, PriceLevel> OrdersAtPrice;
+typedef std::map<Price, PriceLevel, std::greater<>> BidsAtPrice;
+typedef std::map<Price, PriceLevel, std::less<>> AsksAtPrice;
 typedef std::map<OrderId, POrder> Orders;
 
 class Orderbook{
 private:
-    OrdersAtPrice bids_;
-    OrdersAtPrice asks_;
+    BidsAtPrice bids_;
+    AsksAtPrice asks_;
     Orders orders_;
 
 public:
@@ -141,6 +145,22 @@ public:
         }
     }
 
+    bool CanMatch() const{
+        // check if either Orderbook is empty
+        if(bids_.empty() || asks_.empty()){
+            return false;
+        }
+
+        // check if there is an order that crosses the book
+        return bids_.begin()->first >= asks_.begin()->first ? true : false;
+    }
+
+    void Match(){
+        // need to write a loop that checks and matches orders that are crossing the book
+        // must also check that one side of the book is not empty each loop
+
+    }
+
     void ModifyOrder(){
 
     }
@@ -163,6 +183,7 @@ public:
             for(auto order_it = level_it->second.begin(); order_it != level_it->second.end(); ++order_it){
                 std::cout << (*order_it)->Print() << " -> ";
             }
+            std::cout << std::endl;
         }
     }   
 };
@@ -173,11 +194,21 @@ int Order::order_id_ = 0;
 int Ex5(){
     Order test_order(100, 10, Side::Bid);
     Order test_order2(100, 30, Side::Bid);
-    std::cout << test_order.Print() << std::endl;
+    Order test_order3(101, 20, Side::Ask);
+    Order test_order4(102, 15, Side::Ask);
+    Order test_order5(101, 100, Side::Bid);
 
     Orderbook orderbook;
     orderbook.AddOrder(&test_order);
     orderbook.AddOrder(&test_order2);
+    orderbook.AddOrder(&test_order3);
+    orderbook.AddOrder(&test_order4);
+    orderbook.AddOrder(&test_order5);
     orderbook.Print();
+    std::cout << orderbook.CanMatch() << std::endl;
+
+    orderbook.CancelOrder(&test_order5);
+    orderbook.Print();
+    std::cout << orderbook.CanMatch() << std::endl;
     return 0;
 }
