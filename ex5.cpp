@@ -1,9 +1,10 @@
 #pragma once
+#include <algorithm>
+#include <deque>
 #include <iostream>
 #include <map>
 #include <mutex>
 #include <thread>
-#include <vector>
 #include "ScopedThread.cpp"
 
 /*
@@ -94,13 +95,13 @@ public:
     }
 
     bool IsFilled() const{
-        return GetRemainingQuantity();
+        return GetRemainingQuantity() == 0 ? true : false;
     }
 
 };
 
 typedef Order* POrder;
-typedef std::vector<POrder> PriceLevel;
+typedef std::deque<POrder> PriceLevel;
 typedef std::map<Price, PriceLevel, std::greater<>> BidsAtPrice;
 typedef std::map<Price, PriceLevel, std::less<>> AsksAtPrice;
 typedef std::map<OrderId, POrder> Orders;
@@ -127,6 +128,8 @@ public:
         }else{
             asks_[new_order->GetPrice()].push_back(new_order);
         }
+
+        Match();
     }
 
     void CancelOrder(const POrder& cancel_order){
@@ -158,9 +161,41 @@ public:
     void Match(){
         // need to write a loop that checks and matches orders that are crossing the book
         // must also check that one side of the book is not empty each loop
+        
+        while(CanMatch()){ // takes care of the check that both sides of the book are full
+            // need to fill both orders at the front of the price level vector 
+            // for the minimum quantity between the two orders
+            
+            // first bid
+            auto ptop_bid = bids_.begin()->second.front();
+            
+            // first ask
+            auto ptop_ask = asks_.begin()->second.front();
 
+            Quantity traded_quantity = std::min(ptop_bid->GetRemainingQuantity(), ptop_ask->GetRemainingQuantity());
+
+            ptop_bid->SetRemainingQuantity(ptop_bid->GetRemainingQuantity() - traded_quantity);
+            ptop_ask->SetRemainingQuantity(ptop_ask->GetRemainingQuantity() - traded_quantity);
+
+            if(ptop_bid->IsFilled()){
+                bids_.begin()->second.pop_front();
+            }
+
+            if(bids_.begin()->second.empty()){
+                bids_.erase(ptop_bid->GetPrice());
+            }
+
+            if(ptop_ask->IsFilled()){
+                asks_.begin()->second.pop_front();
+            }
+
+            if(asks_.begin()->second.empty()){
+                asks_.erase(ptop_ask->GetPrice());
+            }
+        }
     }
 
+    // Not needed for this exercise
     void ModifyOrder(){
 
     }
@@ -197,18 +232,21 @@ int Ex5(){
     Order test_order3(101, 20, Side::Ask);
     Order test_order4(102, 15, Side::Ask);
     Order test_order5(101, 100, Side::Bid);
+    Order test_order6(99, 200, Side::Ask);
 
     Orderbook orderbook;
     orderbook.AddOrder(&test_order);
     orderbook.AddOrder(&test_order2);
     orderbook.AddOrder(&test_order3);
     orderbook.AddOrder(&test_order4);
+    orderbook.Print();
     orderbook.AddOrder(&test_order5);
     orderbook.Print();
-    std::cout << orderbook.CanMatch() << std::endl;
+    std::cout << std::endl << std::endl;
 
-    orderbook.CancelOrder(&test_order5);
+    orderbook.AddOrder(&test_order6);
     orderbook.Print();
-    std::cout << orderbook.CanMatch() << std::endl;
+
+
     return 0;
 }
