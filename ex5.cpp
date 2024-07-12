@@ -252,8 +252,24 @@ int Ex5(){
 
     Orderbook orderbook;
     {
-        std::thread t1(&Orderbook::AddOrder, orderbook, &test_order);
+        // must pass the orderbook by reference to the thread
+        std::thread t1(&Orderbook::AddOrder, &orderbook, &test_order);
         ScopedThread s1(std::move(t1));
+
+        std::thread t2(&Orderbook::AddOrder, &orderbook, &test_order2);
+        ScopedThread s2(std::move(t2));
+
+        std::thread t3(&Orderbook::AddOrder, &orderbook, &test_order3);
+        ScopedThread s3(std::move(t3));
+        
+        std::thread t4(&Orderbook::AddOrder, &orderbook, &test_order4);
+        ScopedThread s4(std::move(t4));
+
+        std::thread t5(&Orderbook::AddOrder, &orderbook, &test_order5);
+        ScopedThread s5(std::move(t5));
+
+        std::thread t6(&Orderbook::AddOrder, &orderbook, &test_order6);
+        ScopedThread s6(std::move(t6));
     }
     /*
     orderbook.AddOrder(&test_order);
