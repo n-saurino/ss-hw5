@@ -185,7 +185,7 @@ public:
             
             // debugging the order of the trades in the book
             // Print();            
-            
+
             // first bid
             auto ptop_bid = bids_.begin()->second.front();
             
@@ -277,21 +277,8 @@ int Ex5(){
         std::thread t6(&Orderbook::AddOrder, &orderbook, &test_order6);
         ScopedThread s6(std::move(t6));
     }
-    /*
-    orderbook.AddOrder(&test_order);
-    orderbook.AddOrder(&test_order2);
-    orderbook.AddOrder(&test_order3);
-    orderbook.AddOrder(&test_order4);
-    orderbook.Print();
-    orderbook.AddOrder(&test_order5);
-    orderbook.Print();
-    std::cout << std::endl << std::endl;
-
-    orderbook.AddOrder(&test_order6);
-    */
 
    orderbook.Print();
-
-
+   
     return 0;
 }
