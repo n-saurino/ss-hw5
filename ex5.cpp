@@ -52,10 +52,10 @@ typedef int64_t Price;
 typedef int32_t Quantity;
 typedef int32_t OrderId;
 
-
 class Order{
 private:
-    static OrderId order_id_;
+    static OrderId next_order_id;
+    OrderId order_id_;
     Price price_;
     Quantity initial_quantity_;
     Quantity remaining_quantity_;
@@ -63,8 +63,8 @@ private:
 
 public:
     Order(Price price, Quantity quantity, Side side): price_(price), initial_quantity_(quantity), 
-                                                    remaining_quantity_(quantity), side_(side){
-        order_id_++;
+                                                    remaining_quantity_(quantity), side_(side),
+                                                    order_id_(++next_order_id){
     }
 
     ~Order(){
@@ -171,6 +171,7 @@ public:
         // need to write a loop that checks and matches orders that are crossing the book
         // must also check that one side of the book is not empty each loop
         // don't actually take the locks yet
+
         std::unique_lock<std::mutex> bid_lock(bid_mutex, std::defer_lock);
         std::unique_lock<std::mutex> ask_lock(ask_mutex, std::defer_lock);
     
@@ -238,8 +239,9 @@ public:
     }   
 };
 
+
 // Definition of the static member variable
-int Order::order_id_ = 0;
+int Order::next_order_id = 0;
 
 int Ex5(){
 
