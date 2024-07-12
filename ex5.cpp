@@ -15,6 +15,10 @@
 */
 
 /*
+
+    Where should the locks occur?
+    The assignment indicates we should use mutexes at the orderbook level (seems a little draconian)
+
     BLUEPRINT
 
     struct Order:
@@ -35,6 +39,9 @@
         ModifyOrder()
 
 */
+
+std::mutex bid_mutex;
+std::mutex ask_mutex;
 
 enum class Side{
     Bid,
@@ -124,8 +131,10 @@ public:
     void AddOrder(const POrder& new_order){
         orders_[new_order->GetOrderId()] = new_order;
         if(new_order->GetSide() == Side::Bid){
+            std::unique_lock<std::mutex> bid_lock(bid_mutex);
             bids_[new_order->GetPrice()].push_back(new_order);
         }else{
+            std::unique_lock<std::mutex> ask_lock(ask_mutex);
             asks_[new_order->GetPrice()].push_back(new_order);
         }
 
@@ -161,7 +170,13 @@ public:
     void Match(){
         // need to write a loop that checks and matches orders that are crossing the book
         // must also check that one side of the book is not empty each loop
-        
+        // don't actually take the locks yet
+        std::unique_lock<std::mutex> bid_lock(bid_mutex, std::defer_lock);
+        std::unique_lock<std::mutex> ask_lock(ask_mutex, std::defer_lock);
+    
+        // lock both unique_locks without deadlock
+        std::lock(bid_lock, ask_lock);
+
         while(CanMatch()){ // takes care of the check that both sides of the book are full
             // need to fill both orders at the front of the price level vector 
             // for the minimum quantity between the two orders
@@ -227,6 +242,7 @@ public:
 int Order::order_id_ = 0;
 
 int Ex5(){
+
     Order test_order(100, 10, Side::Bid);
     Order test_order2(100, 30, Side::Bid);
     Order test_order3(101, 20, Side::Ask);
@@ -235,6 +251,11 @@ int Ex5(){
     Order test_order6(99, 200, Side::Ask);
 
     Orderbook orderbook;
+    {
+        std::thread t1(&Orderbook::AddOrder, orderbook, &test_order);
+        ScopedThread s1(std::move(t1));
+    }
+    /*
     orderbook.AddOrder(&test_order);
     orderbook.AddOrder(&test_order2);
     orderbook.AddOrder(&test_order3);
@@ -245,7 +266,9 @@ int Ex5(){
     std::cout << std::endl << std::endl;
 
     orderbook.AddOrder(&test_order6);
-    orderbook.Print();
+    */
+
+   orderbook.Print();
 
 
     return 0;
