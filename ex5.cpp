@@ -130,6 +130,7 @@ public:
 
     void AddOrder(const POrder& new_order){
         orders_[new_order->GetOrderId()] = new_order;
+        
         if(new_order->GetSide() == Side::Bid){
             std::unique_lock<std::mutex> bid_lock(bid_mutex);
             bids_[new_order->GetPrice()].push_back(new_order);
@@ -181,6 +182,9 @@ public:
         while(CanMatch()){ // takes care of the check that both sides of the book are full
             // need to fill both orders at the front of the price level vector 
             // for the minimum quantity between the two orders
+            
+            // debugging the order of the trades in the book
+            // Print();            
             
             // first bid
             auto ptop_bid = bids_.begin()->second.front();
